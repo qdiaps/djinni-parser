@@ -32,10 +32,10 @@ You need a service account to work with tables.
 1. Go to the [Google Cloud Console](https://console.cloud.google.com/).
 2. Create a new project.
 3. In the `APIs & Services > Library` section, find and enable two APIs:
-  - Google Sheets API
-  - Google Drive API
+    - Google Sheets API
+    - Google Drive API
 4. In the `Credentials` section, click `Create Credentials > Service Account`.
-5. Fill in your name and click `Create.`. Select the role `Editor`.
+5. Fill in your name and click `Create`. Select the role `Editor`.
 6. Click on the created service account email, go to the `Keys > Add Key > Create new key > JSON`.
 7. The file will download to your computer. Rename it to `creds.json` and save it - you'll need it later.
 
@@ -48,10 +48,10 @@ You need a service account to work with tables.
 ### Preparing Google Sheets
 1. Create a new Google Sheet.
 2. **Important:** In the first line, create the headings manually:
-  - Cell A1: `Date`
-  - Cell B1: `Vacancies` (or `Values`)
-3. Click the Share button.
-4. Enter the email address for your service account (from step 1, it looks like `bot@project.iam.gserviceaccount.com`) and grant `Editor` permissions.
+    - Cell A1: `Date`
+    - Cell B1: `Vacancies` (or `Values`)
+3. Click the `Share` button.
+4. Enter the email address for your service account (from step 1, it looks like `bot@project.iam.gserviceaccount.com`) and grant **Editor** permissions.
 
 ## Installation and startup
 The project is designed to run on `Linux` (Ubuntu/Debian) using `Systemd`.
@@ -62,8 +62,8 @@ git clone https://github.com/qdiaps/djinni-parser.git
 cd djinni-parser
 ```
 2. Add keys:
-  - Copy your `creds.json` file to the root of your project folder.
-  - Create an `.env` file (see the [Configuration](#configuration) section).
+    - Copy your `creds.json` file to the root of your project folder.
+    - Create an `.env` file (see the [Configuration](#configuration) section).
 3. Run the automatic installation. The script will create a virtual environment, install libraries, and configure autostart via systemd:
 ```bash
 chmod +x install.sh
@@ -93,7 +93,7 @@ By default, `install.sh` generates standard configuration files (runs daily at 1
 2. The installer will detect these files and use them instead of the defaults.
 
 **Template for `djinni_parser.timer` (e.g., run at 09:00):**
-```toml
+```ini
 [Unit]
 Description=Run Djinni Parser Daily at 09:00
 
@@ -108,7 +108,7 @@ WantedBy=timers.target
 **Template for `djinni_parser.service`:**
 > [!NOTE]
 > When using custom files, you must provide `absolute paths` to your project and python executable inside `.venv`.
-```toml
+```ini
 [Unit]
 Description=Djinni Parser Service
 After=network-online.target
