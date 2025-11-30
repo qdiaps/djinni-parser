@@ -3,7 +3,7 @@
 > [!IMPORTANT]
 > **Disclaimer:** This tool is for educational purposes only. Please respect the website's terms of service and robots.txt.
 
-An automated bot for monitoring the number of vacancies on the [Djinni.co](https://djinni.co) website. The script parses data daily according to a specified filter, saves the history in Google Sheets, and sends a report to Telegram with the dynamics of changes (for example: `+5 compared to yesterday`).
+An automated bot for monitoring the number of vacancies on the [Djinni.co](https://djinni.co) website. The script parses data daily from multiple search URLs defined in the configuration, saves the history in Google Sheets, and sends a detailed report to Telegram.
 
 ## Table of Contents
 - [Functionality](#functionality)
@@ -13,13 +13,20 @@ An automated bot for monitoring the number of vacancies on the [Djinni.co](https
   - [Preparing Google Sheets](#preparing-google-sheets)
 - [Installation and startup](#installation-and-startup)
 - [Configuration](#configuration)
+  - [Environment Variables (.env)](#environment-variables-env)
+  - [URLs Configuration (config.json)](#urls-configuration-configjson)
   - [Advanced: Custom Systemd Configuration](#advanced-custom-systemd-configuration)
 - [Problem solving](#problem-solving)
 
 ## Functionality
-1. Collects the number of vacancies by URL (for example, "DevOps").
-2. Saves the date and number of vacancies in Google Sheets.
-3. Sends a message to Telegram: `Vacancies: 245 (+2 compared to yesterday)`
+1. Collects the number of vacancies from multiple URLs specified in a JSON configuration file.
+2. Saves the date and vacancy counts for each category in Google Sheets.
+3. Sends a daily summary to Telegram. Example:
+```text
+📊 Daily Report
+All Vacancies: 238
+DevOps: 102
+```
 4. Runs in the background via `systemd` (timer set to `12:00` daily).
 5. Includes the Bash script install.sh for automatic configuration of the environment, dependencies, and services.
 
@@ -47,9 +54,9 @@ You need a service account to work with tables.
 
 ### Preparing Google Sheets
 1. Create a new Google Sheet.
-2. **Important:** In the first line, create the headings manually:
-    - Cell A1: `Date`
-    - Cell B1: `Vacancies` (or `Values`)
+2. **Important:** The script relies on column names to map data. In the first line, create headings manually:
+    - Cell A1: `Date` (matches the `DATE_COLUMN_NAME` variable).
+    - Subsequent Cells: create columns for each category you plan to track. Their names `must match` the `name` fields in your `config.json` (e.g., `All Vacancies`, `DevOps`).
 3. Click the `Share` button.
 4. Enter the email address for your service account (from step 1, it looks like `bot@project.iam.gserviceaccount.com`) and grant **Editor** permissions.
 
@@ -63,7 +70,7 @@ cd djinni-parser
 ```
 2. Add keys:
     - Copy your `creds.json` file to the root of your project folder.
-    - Create an `.env` file (see the [Configuration](#configuration) section).
+    - Create an `.env` file and `config.json` (see the [Configuration](#configuration) section).
 3. Run the automatic installation. The script will create a virtual environment, install libraries, and configure autostart via systemd:
 ```bash
 chmod +x install.sh
@@ -72,6 +79,7 @@ chmod +x install.sh
 4. Follow the instructions on the screen.
 
 ## Configuration
+### Environment Variables (.env)
 Create an `.env` file based on the example:
 ```bash
 cp .env.example .env
@@ -82,9 +90,30 @@ Description of variables:
 | --- | --- | --- |
 | `BOT_TOKEN` | Token from [@BotFather](https://t.me/BotFather) | `1234567890:ABCDEFgHIJKLmNOPQrstUvwXYZ` |
 | `CHAT_ID` | Your Telegram chat ID | `987654321` |
-| `URL` | Link to Djinni search | `https://djinni.co/jobs/?primary_keyword=DevOps` |
 | `SHEET_NAME` | Name of the Google Sheet | `Vacancies` |
 | `CREDS_PATH` | Path to the `creds.json` file | Filled in automatically via `install.sh` |
+| `DATE_COLUMN_NAME` | Name of the column for dates | `Date` |
+| `URLS_CONFIG_PATH` | Path to the JSON config | `config.json` |
+
+### URLs Configuration (config.json)
+This file defines which URLs to parse. Create `config.json` in the project root:
+```bash
+cp config.json.example config.json
+```
+Format:
+```json
+[
+  {
+    "name": "All Vacancies",
+    "url": "https://djinni.co/jobs"
+  },
+  {
+    "name": "DevOps",
+    "url": "https://djinni.co/jobs/?primary_keyword=DevOps"
+  }
+]
+```
+**Note:** The `name` field must match the column header in your Google Sheet.
 
 ### Advanced: Custom Systemd Configuration
 By default, `install.sh` generates standard configuration files (runs daily at 12:00). If you want to customize the schedule or service parameters (e.g., run every hour), you can provide your own systemd files.
@@ -134,6 +163,7 @@ Check the logs (the cause of the error will be there):
 journalctl --user -u djinni_parser.service
 ```
 2. **"Google Sheets API Error" error.** Make sure you have added the service bot's email (from `creds.json`) to your spreadsheet's access settings as an `Editor`.
+3. **"Spreadsheet is missing columns" error.** Ensure that every `name` in your `config.json` corresponds to a column header in your Google Sheet.
 3. **How do I change the start time?** Edit the timer file:
 ```bash
 nano ~/.config/systemd/user/djinni_parser.timer
