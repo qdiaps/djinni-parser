@@ -83,6 +83,7 @@ def main() -> None:
         logger.info('Data saved to Google Sheets')
     except ValueError as e:
         send_error(f'Saving failed: {e}')
+        return
 
     try:
         date = datetime.now().strftime('%d.%m.%Y')
@@ -94,6 +95,7 @@ def main() -> None:
         logger.info('Success message sent to Telegram')
     except Exception as e:
         logger.error(f'Failed to send final report: {e}')
+        return
 
     logger.info('Script finished successfully')
 
